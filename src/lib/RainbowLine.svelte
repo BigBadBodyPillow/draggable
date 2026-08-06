@@ -1,0 +1,44 @@
+<div class="rainbow-line"></div>
+
+<style>
+  :root {
+    --rainbow: linear-gradient(
+      to left,
+      #fef26a,
+      #fe8462,
+      #ff70cb,
+      #d270ff,
+      #743ad5,
+      #709df8,
+      #5bffbd,
+      #709df8,
+      #743ad5,
+      #d270ff,
+      #ff70cb,
+      #fe8462,
+      #fef26a
+    );
+  }
+
+  .rainbow-line {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 1px;
+    z-index: 50;
+
+    background-image: var(--rainbow);
+    background-size: 400%;
+    animation: rainbow-animation 100s infinite;
+  }
+
+  @keyframes rainbow-animation {
+    0% {
+      background-position: 0%;
+    }
+    100% {
+      background-position: 400%;
+    }
+  }
+</style>
