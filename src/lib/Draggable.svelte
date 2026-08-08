@@ -1,37 +1,119 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  interface Coordinates {
+    x: number;
+    y: number;
+  }
 
-  let tag: HTMLDivElement | null = $state(null);
+  let tag: HTMLElement | null = $state(null);
+  let section: HTMLElement | null = $state(null);
+  let offset: Coordinates = $state({ x: 0, y: 0 });
+  let isDragging = $state(false);
+  let dragOffset: Coordinates = $state({ x: 0, y: 0 });
+  let sectionCenter: Coordinates = $state({ x: 0, y: 0 });
+  let maxDrag: Coordinates = $state({ x: 0, y: 0 });
+  let timing: string = $state('cubic-bezier(0,1,1,1)');
 
-  function getElementPosition(element: HTMLElement | null) {
-    if (!element) {
-      return { x: 0, y: 0 };
-    }
+  const normalTiming = 'cubic-bezier(0,1,1,1)';
+  const bounceOutThenInTiming = 'cubic-bezier(.38,2.48,.74,-0.38)';
 
-    const rect = element.getBoundingClientRect();
-    return {
-      x: rect.left,
-      y: rect.top
+  function clamp(value: number, min: number, max: number) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function updateTiming() {
+    const distance = Math.hypot(offset.x, offset.y);
+    timing = distance > 100 ? bounceOutThenInTiming : normalTiming;
+  }
+
+  function getCursorPosition(e: MouseEvent) {
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function updateDragLimits() {
+    if (!section || !tag) return;
+
+    const sectionRect = section.getBoundingClientRect();
+    const tagRect = tag.getBoundingClientRect();
+    const padding = 20; /* limit */
+
+    sectionCenter = {
+      x: Math.round(sectionRect.left + sectionRect.width / 2),
+      y: Math.round(sectionRect.top + sectionRect.height / 2)
+    };
+
+    maxDrag = {
+      x: Math.round((sectionRect.width - tagRect.width) / 2 - padding),
+      y: Math.round((sectionRect.height - tagRect.height) / 2 - padding)
     };
   }
 
-  function moveElement(element: HTMLElement | null, newX: number, newY: number) {
-    if (element) {
-      // const { x, y } = getElementPosition(element);
+  function startDragging(e: MouseEvent) {
+    if (!tag) return;
 
-      element.style.transform = `translate(${newX}px, ${newY}px)`;
-    }
+    e.preventDefault();
+    updateDragLimits();
+    const cursor = getCursorPosition(e);
+
+    const rect = tag.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    dragOffset = {
+      x: cursor.x - centerX,
+      y: cursor.y - centerY
+    };
+
+    timing = normalTiming;
+    isDragging = true;
   }
 
-  onMount(() => {
-    // const { x, y } = getElementPosition(tag);
-    // console.log('Initial position:', { x, y });
-    moveElement(tag, 30, 0);
-  });
+  function stopDragging() {
+    if (!isDragging) return;
+    isDragging = false;
+    resetOffset();
+  }
+
+  function moveElement(e: MouseEvent) {
+    if (!isDragging) return;
+
+    const cursor = getCursorPosition(e);
+    const desiredCenterX = cursor.x - dragOffset.x;
+    const desiredCenterY = cursor.y - dragOffset.y;
+
+    offset = {
+      x: Math.round(clamp(desiredCenterX - sectionCenter.x, -maxDrag.x, maxDrag.x)),
+      y: Math.round(clamp(desiredCenterY - sectionCenter.y, -maxDrag.y, maxDrag.y))
+    };
+
+    updateTiming();
+  }
+
+  function resetOffset() {
+    offset = {
+      x: 0,
+      y: 0
+    };
+  }
 </script>
 
-<section id="window">
-  <div id="tag" bind:this={tag} data-X="" data-Y="">Drag Me</div>
+<svelte:window
+  onmousemove={isDragging ? moveElement : undefined}
+  onmouseup={stopDragging}
+  onmouseleave={stopDragging}
+/>
+
+<section role="main" bind:this={section}>
+  <button
+    id="tag"
+    bind:this={tag}
+    style={`--x:${offset.x}px; --y:${offset.y}px; ${isDragging ? 'cursor: grabbing;' : `transition: all 0.3s ${timing}`}`}
+    // cubic-bezier(.38,2.48,.74,-0.38)
+    // cubic-bezier(0,2.64,.31,.35)
+    // cubic-bezier(0,1.5,1,1)
+    onmousedown={startDragging}
+    aria-label="draggable"
+  >
+  </button>
 </section>
 
 <style>
@@ -48,10 +130,18 @@
   }
 
   #tag {
+    --x: 0;
+    --y: 0;
+
+    border-radius: 100vh !important;
+    width: 60px;
+    aspect-ratio: 1;
+    transform: translate(var(--x), var(--y));
     background-color: var(--bg);
+    color: var(--text);
     padding: 0.6rem 0.8rem;
     border-radius: var(--radius);
-    cursor: pointer;
+    cursor: grab;
     user-select: none;
   }
 </style>

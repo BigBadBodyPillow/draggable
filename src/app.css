@@ -95,7 +95,9 @@ button {
   background-color: var(--accent);
   border-radius: var(--radius);
   border: none;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 
   &:hover,
   &:focus-visible {
@@ -109,4 +111,8 @@ button {
     background-color: var(--accent-active);
     transform: scale(0.9);
   }
+}
+
+#tag {
+  will-change: transform;
 }
