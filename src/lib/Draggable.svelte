@@ -13,7 +13,7 @@
   let maxDrag: Coordinates = $state({ x: 0, y: 0 });
   let timing: string = $state('cubic-bezier(0,1,1,1)');
 
-  const normalTiming = 'cubic-bezier(0,1,1,1)';
+  const normalTiming = 'cubic-bezier(0,1,0,1)';
   const bounceOutThenInTiming = 'cubic-bezier(.38,2.48,.74,-0.38)';
 
   function clamp(value: number, min: number, max: number) {
@@ -133,15 +133,20 @@
     --x: 0;
     --y: 0;
 
-    border-radius: 100vh !important;
     width: 60px;
     aspect-ratio: 1;
-    transform: translate(var(--x), var(--y));
+    border-radius: 100vh !important;
+    border: none;
     background-color: var(--bg);
     color: var(--text);
     padding: 0.6rem 0.8rem;
-    border-radius: var(--radius);
     cursor: grab;
     user-select: none;
+
+    transform: translate(var(--x), var(--y));
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+    will-change: transform;
   }
 </style>

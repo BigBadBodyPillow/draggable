@@ -86,33 +86,3 @@ body {
 p {
   font-family: var(--inter);
 }
-
-button {
-  height: fit-content;
-  padding: 0.35em 1em;
-  cursor: pointer;
-  color: var(--bg);
-  background-color: var(--accent);
-  border-radius: var(--radius);
-  border: none;
-  transition:
-    background-color 0.2s,
-    color 0.2s;
-
-  &:hover,
-  &:focus-visible {
-    color: --invert-colour(var(--text));
-    color: var(--text-invert);
-    background-color: var(--accent-hover);
-    transform: scale(0.95);
-  }
-
-  &:active {
-    background-color: var(--accent-active);
-    transform: scale(0.9);
-  }
-}
-
-#tag {
-  will-change: transform;
-}
