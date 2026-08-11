@@ -11,6 +11,10 @@
   let dragOffset: Coordinates = $state({ x: 0, y: 0 });
   let sectionCenter: Coordinates = $state({ x: 0, y: 0 });
   let maxDrag: Coordinates = $state({ x: 0, y: 0 });
+  let cursor: Coordinates = $state({ x: 0, y: 0 });
+  let tagCenter: Coordinates = $state({ x: 0, y: 0 });
+  let angleDeg: number = $state(0);
+  let orbitRadius: number = $state(48);
   let timing: string = $state('cubic-bezier(0,1,1,1)');
 
   const normalTiming = 'cubic-bezier(0,1,0,1)';
@@ -27,6 +31,31 @@
 
   function getCursorPosition(e: MouseEvent) {
     return { x: e.clientX, y: e.clientY };
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+    cursor = getCursorPosition(e);
+
+    if (tag) {
+      const rect = tag.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      tagCenter = { x: Math.round(centerX), y: Math.round(centerY) };
+
+      const dx = cursor.x - centerX;
+      const dy = cursor.y - centerY;
+      angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
+
+      orbitRadius = Math.round(rect.width / 2 + 12);
+
+      tag.style.setProperty('--angle', `${angleDeg}deg`);
+      tag.style.setProperty('--radius', `${orbitRadius}px`);
+    }
+
+    if (isDragging) {
+      moveElement(e);
+    }
   }
 
   function updateDragLimits() {
@@ -97,9 +126,10 @@
 </script>
 
 <svelte:window
-  onmousemove={isDragging ? moveElement : undefined}
+  onmousemove={handleMouseMove}
   onmouseup={stopDragging}
   onmouseleave={stopDragging}
+  onresize={updateDragLimits}
 />
 
 <section role="main" bind:this={section}>
@@ -113,6 +143,7 @@
     onmousedown={startDragging}
     aria-label="draggable"
   >
+    <span class="triangle" aria-hidden="true"></span>
   </button>
 </section>
 
@@ -132,6 +163,10 @@
   #tag {
     --x: 0;
     --y: 0;
+    --angle: 0deg;
+    --radius: 40px;
+
+    position: relative;
 
     width: 60px;
     aspect-ratio: 1;
@@ -148,5 +183,22 @@
       background-color 0.2s,
       color 0.2s;
     will-change: transform;
+  }
+
+  .triangle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+
+    /* place on circle and rotate the whole transform so the triangle points outward */
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(var(--radius));
+    transform-origin: center;
+
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 14px solid rgba(0, 0, 0, 0.85);
   }
 </style>
