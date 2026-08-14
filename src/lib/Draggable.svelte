@@ -1,4 +1,6 @@
 <script lang="ts">
+  import arrow from '../assets/arrow.svg?raw';
+
   interface Coordinates {
     x: number;
     y: number;
@@ -11,11 +13,8 @@
   let dragOffset: Coordinates = $state({ x: 0, y: 0 });
   let sectionCenter: Coordinates = $state({ x: 0, y: 0 });
   let maxDrag: Coordinates = $state({ x: 0, y: 0 });
-  let cursor: Coordinates = $state({ x: 0, y: 0 });
-  let tagCenter: Coordinates = $state({ x: 0, y: 0 });
-  let angleDeg: number = $state(0);
-  let orbitRadius: number = $state(48);
   let timing: string = $state('cubic-bezier(0,1,1,1)');
+  let rotation: number = $state(0);
 
   const normalTiming = 'cubic-bezier(0,1,0,1)';
   const bounceOutThenInTiming = 'cubic-bezier(.38,2.48,.74,-0.38)';
@@ -34,29 +33,55 @@
   }
 
   function handleMouseMove(e: MouseEvent) {
-    cursor = getCursorPosition(e);
+    const sectionRect = section?.getBoundingClientRect();
+    if (!sectionRect) return;
+    const radius = sectionRect?.height / 2; /* radiusof rectangle? idk what its called */
 
-    if (tag) {
-      const rect = tag.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
+    const topCenter = { x: sectionCenter.x, y: sectionCenter.y - radius };
+    const cursor = getCursorPosition(e);
 
-      tagCenter = { x: Math.round(centerX), y: Math.round(centerY) };
-
-      const dx = cursor.x - centerX;
-      const dy = cursor.y - centerY;
-      angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
-
-      orbitRadius = Math.round(rect.width / 2 + 12);
-
-      tag.style.setProperty('--angle', `${angleDeg}deg`);
-      tag.style.setProperty('--radius', `${orbitRadius}px`);
-    }
+    rotation = getAngle(sectionCenter, cursor);
 
     if (isDragging) {
       moveElement(e);
     }
   }
+
+  // function getAngle(
+  //   PointWhereTheAngleIs: Coordinates,
+  //   opositePoint1: Coordinates,
+  //   opositePoint2: Coordinates
+  // ) {
+  //   // a^2 = b^2 + c^2 -2bc * cos(A)
+  //   // 2bc * cos(A) =b^2 + c^2 - a^2
+  //   // A = arccos((b^2 + c^2 -a^2)/2bc)
+  //   const a = getDistance(opositePoint1, opositePoint2);
+  //   const b = getDistance(PointWhereTheAngleIs, opositePoint1);
+  //   const c = getDistance(PointWhereTheAngleIs, opositePoint2);
+
+  //   const radians = Math.acos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c));
+  //   const angle = radians * (180 / Math.PI);
+
+  //   return angle;
+  // }
+
+  function getAngle(center: Coordinates, target: Coordinates) {
+    const dx = target.x - center.x;
+    const dy = target.y - center.y;
+
+    // negative y because css higher number = lower down
+    const angle = Math.atan2(dx, -dy) * (180 / Math.PI);
+
+    return angle;
+  }
+
+  // function getDistance(pointOne: Coordinates, PointTwo: Coordinates) {
+  //   // distance = root(x2 - x1)^2 + (y2-y1)^2
+  //   const x = PointTwo.x - pointOne.x;
+  //   const y = PointTwo.y - pointOne.y;
+  //   const distance = Math.sqrt(x ** 2 + y ** 2);
+  //   return distance;
+  // }
 
   function updateDragLimits() {
     if (!section || !tag) return;
@@ -132,7 +157,7 @@
   onresize={updateDragLimits}
 />
 
-<section role="main" bind:this={section}>
+<section role="main" bind:this={section} {@attach updateDragLimits}>
   <button
     id="tag"
     bind:this={tag}
@@ -143,7 +168,7 @@
     onmousedown={startDragging}
     aria-label="draggable"
   >
-    <span class="triangle" aria-hidden="true"></span>
+    <div class="arrow" style={`--rotation:${rotation}deg`}>{@html arrow}</div>
   </button>
 </section>
 
@@ -164,11 +189,11 @@
     --x: 0;
     --y: 0;
     --angle: 0deg;
-    --radius: 40px;
+    --radius: 30px;
 
     position: relative;
 
-    width: 60px;
+    width: calc(var(--radius) * 2);
     aspect-ratio: 1;
     border-radius: 100vh !important;
     border: none;
@@ -185,20 +210,28 @@
     will-change: transform;
   }
 
-  .triangle {
+  .arrow {
+    --width: 20px;
+    --offset: 13px;
+    --rotation: 0deg;
     position: absolute;
-    left: 50%;
     top: 50%;
-    width: 0;
-    height: 0;
-    pointer-events: none;
+    left: 50%;
+    /* diameter of circle + arrows height + the offset(*2 becuase  its centered in center so the variable would be halved) */
+    height: calc(var(--radius) * 2 + (var(--offset) * 2) + var(--width));
+    transform-origin: center center;
+    transform: translate(-50%, -50%) rotate(var(--rotation));
 
-    /* place on circle and rotate the whole transform so the triangle points outward */
-    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(var(--radius));
-    transform-origin: center;
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    box-sizing: border-box;
+    border-radius: 0px;
 
-    border-top: 8px solid transparent;
-    border-bottom: 8px solid transparent;
-    border-left: 14px solid rgba(0, 0, 0, 0.85);
+    :global(svg) {
+      width: var(--width);
+      height: var(--width);
+      fill: red;
+    }
   }
 </style>
