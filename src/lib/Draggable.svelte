@@ -35,9 +35,7 @@
   function handleMouseMove(e: MouseEvent) {
     const sectionRect = section?.getBoundingClientRect();
     if (!sectionRect) return;
-    const radius = sectionRect?.height / 2; /* radiusof rectangle? idk what its called */
 
-    const topCenter = { x: sectionCenter.x, y: sectionCenter.y - radius };
     const cursor = getCursorPosition(e);
 
     rotation = getAngle(sectionCenter, cursor);
@@ -46,24 +44,6 @@
       moveElement(e);
     }
   }
-
-  // function getAngle(
-  //   PointWhereTheAngleIs: Coordinates,
-  //   opositePoint1: Coordinates,
-  //   opositePoint2: Coordinates
-  // ) {
-  //   // a^2 = b^2 + c^2 -2bc * cos(A)
-  //   // 2bc * cos(A) =b^2 + c^2 - a^2
-  //   // A = arccos((b^2 + c^2 -a^2)/2bc)
-  //   const a = getDistance(opositePoint1, opositePoint2);
-  //   const b = getDistance(PointWhereTheAngleIs, opositePoint1);
-  //   const c = getDistance(PointWhereTheAngleIs, opositePoint2);
-
-  //   const radians = Math.acos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c));
-  //   const angle = radians * (180 / Math.PI);
-
-  //   return angle;
-  // }
 
   function getAngle(center: Coordinates, target: Coordinates) {
     const dx = target.x - center.x;
@@ -74,14 +54,6 @@
 
     return angle;
   }
-
-  // function getDistance(pointOne: Coordinates, PointTwo: Coordinates) {
-  //   // distance = root(x2 - x1)^2 + (y2-y1)^2
-  //   const x = PointTwo.x - pointOne.x;
-  //   const y = PointTwo.y - pointOne.y;
-  //   const distance = Math.sqrt(x ** 2 + y ** 2);
-  //   return distance;
-  // }
 
   function updateDragLimits() {
     if (!section || !tag) return;
@@ -161,14 +133,17 @@
   <button
     id="tag"
     bind:this={tag}
-    style={`--x:${offset.x}px; --y:${offset.y}px; ${isDragging ? 'cursor: grabbing;' : `transition: all 0.3s ${timing}`}`}
+    style={`--x:${offset.x}px; --y:${offset.y}px; ${isDragging ? 'cursor: grabbing; --cursor-arrow-colour:transparent; --center-arrow-colour: aqua;' : `transition: all 0.3s ${timing}`}`}
     // cubic-bezier(.38,2.48,.74,-0.38)
     // cubic-bezier(0,2.64,.31,.35)
     // cubic-bezier(0,1.5,1,1)
     onmousedown={startDragging}
     aria-label="draggable"
   >
-    <div class="arrow" style={`--rotation:${rotation}deg`}>{@html arrow}</div>
+    <div class="arrow" style={`--rotation:${rotation}deg`}>
+      <div class="cursor">{@html arrow}</div>
+      <div class="center">{@html arrow}</div>
+    </div>
   </button>
 </section>
 
@@ -190,6 +165,8 @@
     --y: 0;
     --angle: 0deg;
     --radius: 30px;
+    --cursor-arrow-colour: red;
+    --center-arrow-colour: transparent;
 
     position: relative;
 
@@ -214,6 +191,7 @@
     --width: 20px;
     --offset: 13px;
     --rotation: 0deg;
+
     position: absolute;
     top: 50%;
     left: 50%;
@@ -223,15 +201,32 @@
     transform: translate(-50%, -50%) rotate(var(--rotation));
 
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    justify-content: space-between;
     align-items: start;
     box-sizing: border-box;
     border-radius: 0px;
 
-    :global(svg) {
-      width: var(--width);
+    .center,
+    .cursor {
+      padding: 0;
+      margin: 0;
       height: var(--width);
-      fill: red;
+      width: var(--width);
+    }
+
+    :global(svg) {
+      width: 100%;
+      height: 100%;
+      transition: fill 0.2s;
+    }
+
+    .cursor :global(svg) {
+      fill: var(--cursor-arrow-colour);
+    }
+    .center :global(svg) {
+      fill: var(--center-arrow-colour);
+      transform: rotate(180deg);
     }
   }
 </style>
