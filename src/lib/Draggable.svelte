@@ -15,6 +15,7 @@
   let maxDrag: Coordinates = $state({ x: 0, y: 0 });
   let timing: string = $state('cubic-bezier(0,1,1,1)');
   let rotation: number = $state(0);
+  let centerArrowVisible: boolean = $state(false);
 
   const normalTiming = 'cubic-bezier(0,1,0,1)';
   const bounceOutThenInTiming = 'cubic-bezier(.38,2.48,.74,-0.38)';
@@ -97,6 +98,7 @@
     if (!isDragging) return;
     isDragging = false;
     resetOffset();
+    centerArrowVisible = false;
   }
 
   function moveElement(e: MouseEvent) {
@@ -112,6 +114,7 @@
     };
 
     updateTiming();
+    toggleCenterArrow();
   }
 
   function resetOffset() {
@@ -119,6 +122,11 @@
       x: 0,
       y: 0
     };
+  }
+
+  function toggleCenterArrow() {
+    const distance = Math.hypot(offset.x, offset.y);
+    centerArrowVisible = distance > 30;
   }
 </script>
 
@@ -133,7 +141,9 @@
   <button
     id="tag"
     bind:this={tag}
-    style={`--x:${offset.x}px; --y:${offset.y}px; ${isDragging ? 'cursor: grabbing; --cursor-arrow-colour:transparent; --center-arrow-colour: aqua;' : `transition: all 0.3s ${timing}`}`}
+    style={`--x:${offset.x}px; --y:${offset.y}px;
+    ${isDragging ? 'cursor: grabbing; --cursor-arrow-colour:transparent;' : `transition: all 0.3s ${timing}`}
+    ${centerArrowVisible ? '--center-arrow-colour: aqua;' : ''}`}
     // cubic-bezier(.38,2.48,.74,-0.38)
     // cubic-bezier(0,2.64,.31,.35)
     // cubic-bezier(0,1.5,1,1)
