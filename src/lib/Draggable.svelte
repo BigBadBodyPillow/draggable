@@ -182,9 +182,14 @@
 
     width: calc(var(--radius) * 2);
     aspect-ratio: 1;
+    background: radial-gradient(
+      circle,
+      rgba(0, 0, 0, 1) 0%,
+      rgba(0, 0, 0, 1) 54%,
+      rgba(97, 97, 97, 1) 68%
+    );
     border-radius: 100vh !important;
     border: none;
-    background-color: var(--bg);
     color: var(--text);
     padding: 0.6rem 0.8rem;
     cursor: grab;
